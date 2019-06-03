@@ -1,0 +1,13 @@
+{:deps {:aliases [:dev]}
+ :nrepl {:port 9000
+         :middleware [cider.nrepl/cider-middleware
+                      refactor-nrepl.middleware/wrap-refactor]}
+ :builds {:main {:target     :browser
+                 :output-dir "resources/public/js"
+                 :asset-path "/js"
+
+                 :modules    {:main {:entries [crudless-todomvc.client]}}
+
+                 :devtools   {:watch-dir "resources/public"
+                              :after-load crudless-todomvc.client/mount
+                              :preloads [fulcro.inspect.preload crudless-todomvc.development-preload]}}}}
