@@ -4,12 +4,18 @@ This is a full stack implementation of the TodoMVC application in Fulcro 2.0. It
 
 This has been modified from the original [Fulcro 2.0 TodoMVC](https://github.com/fulcrologic/fulcro-todomvc) to use a Hasura GraphQL server as the backend instead of a Fulcro server.
 
+This application consists of three docker containers:
+* nginx to serve static assets and act as a reverse proxy
+* hasura, our GraphQL API server
+* postgres, our database
+
 ## Setup
 
 In order to run the application, you need to install:
 * [Docker](https://www.docker.com/get-started) and [Docker Compose](https://docs.docker.com/compose/install/)
 * [npm](https://www.npmjs.com/get-npm)
 * [clojure](https://clojure.org/guides/getting_started)
+* [hasura cli](https://docs.hasura.io/1.0/graphql/manual/hasura-cli/install-hasura-cli.html)
 
 Once you have these installed, run
 ```bash
