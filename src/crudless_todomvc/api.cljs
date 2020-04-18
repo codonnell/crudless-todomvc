@@ -36,25 +36,25 @@
                     (add-item-to-list* id)
                     (clear-list-input-field*))))
   (remote [_]
-    (eql/query->ast1 `[{(type/insert-todos {:objects ~[{:id (str id) :label label}]})
-                        [::type/affected-rows]}])))
+    (eql/query->ast1 `[{(type/insert-todos-one {:object ~{:id (str id) :label label}})
+                        [::todo/id]}])))
 
-(defn- update-todo-ast [id m]
-  (eql/query->ast1 `[{(type/update-todos {:where {:id {:_eq ~(str id)}}
-                                          :_set ~m})
-                      [::type/affected-rows]}]))
+(defn- update-todo-by-id-ast [id m]
+  (eql/query->ast1 `[{(type/update-todos-by-pk {:pk-columns {:id ~(str id)}
+                                                :_set ~m})
+                      [::todo/id]}]))
 
 (defmutation todo-check [{:keys [id]}]
   (action [{:keys [state]}]
     (swap! state set-item-checked* id true))
   (remote [_]
-    (update-todo-ast id {:complete true})))
+    (update-todo-by-id-ast id {:complete true})))
 
 (defmutation todo-uncheck [{:keys [id]}]
   (action [{:keys [state]}]
     (swap! state set-item-checked* id false))
   (remote [_]
-    (update-todo-ast id {:complete false})))
+    (update-todo-by-id-ast id {:complete false})))
 
 (defn set-item-label*
   "Set the given item's label"
@@ -66,7 +66,7 @@
   (action [{:keys [state]}]
     (swap! state set-item-label* id label))
   (remote [_]
-    (update-todo-ast id {:label label})))
+    (update-todo-by-id-ast id {:label label})))
 
 (defn remove-from-idents
   "Given a vector of idents and an id, return a vector of idents that have none that use that ID for their second (id) element."
@@ -79,8 +79,8 @@
                     (update-in [:component/by-id :todo-list ::type/todos] remove-from-idents id)
                     (update ::todo/id dissoc id))))
   (remote [_]
-    (eql/query->ast1 `[{(type/delete-todos {:where {:id {:_eq ~(str id)}}})
-                        [::type/affected-rows]}])))
+    (eql/query->ast1 `[{(type/delete-todos-by-pk {:id ~(str id)})
+                        [::todo/id]}])))
 
 (defn on-all-items-in-list
   [state-map xform & args]
