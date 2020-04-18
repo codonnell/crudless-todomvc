@@ -1,7 +1,7 @@
 (ns crudless-todomvc.api
   (:require
-   [fulcro.client.mutations :as mut :refer [defmutation]]
-   [fulcro.client.primitives :as fp]
+   [com.fulcrologic.fulcro.mutations :as mut :refer [defmutation]]
+   [edn-query-language.core :as eql]
    [crudless-todomvc.type :as type]
    [crudless-todomvc.type.todo :as todo]))
 
@@ -26,23 +26,23 @@
 (defn clear-list-input-field*
   "Clear the main input field of the todo list"
   [state-map]
-  (assoc-in state-map [:component/by-id :todo-list :ui.list/new-item-text] ""))
+  (assoc-in state-map [:component/by-id :todo-list :ui/new-item-text] ""))
 
 (defmutation todo-new-item [{:keys [id label]}]
   (action [{:keys [state ast]}]
     (js/console.info {:id id :label label})
     (swap! state #(-> %
-                      (create-item* id label)
-                      (add-item-to-list* id)
-                      (clear-list-input-field*))))
+                    (create-item* id label)
+                    (add-item-to-list* id)
+                    (clear-list-input-field*))))
   (remote [_]
-    (fp/query->ast1 `[{(type/insert-todos {:objects ~[{:id (str id) :label label}]})
-                       [:affected-rows]}])))
+    (eql/query->ast1 `[{(type/insert-todos {:objects ~[{:id (str id) :label label}]})
+                        [::type/affected-rows]}])))
 
 (defn- update-todo-ast [id m]
-  (fp/query->ast1 `[{(type/update-todos {:where {:id {:_eq ~(str id)}}
-                                         :_set ~m})
-                     [:affected-rows]}]))
+  (eql/query->ast1 `[{(type/update-todos {:where {:id {:_eq ~(str id)}}
+                                          :_set ~m})
+                      [::type/affected-rows]}]))
 
 (defmutation todo-check [{:keys [id]}]
   (action [{:keys [state]}]
@@ -76,11 +76,11 @@
 (defmutation todo-delete-item [{:keys [id]}]
   (action [{:keys [state]}]
     (swap! state #(-> %
-                      (update-in [:component/by-id :todo-list ::type/todos] remove-from-idents id)
-                      (update ::todo/id dissoc id))))
+                    (update-in [:component/by-id :todo-list ::type/todos] remove-from-idents id)
+                    (update ::todo/id dissoc id))))
   (remote [_]
-    (fp/query->ast1 `[{(type/delete-todos {:where {:id {:_eq ~(str id)}}})
-                       [:affected-rows]}])))
+    (eql/query->ast1 `[{(type/delete-todos {:where {:id {:_eq ~(str id)}}})
+                        [::type/affected-rows]}])))
 
 (defn on-all-items-in-list
   [state-map xform & args]
@@ -88,34 +88,34 @@
     (reduce (fn [s idt]
               (let [id (second idt)]
                 (apply xform s id args)))
-            state-map item-idents)))
+      state-map item-idents)))
 
 (defmutation todo-check-all [_]
   (action [{:keys [state]}]
     (swap! state on-all-items-in-list set-item-checked* true))
   (remote [_]
-    (fp/query->ast1 `[{(type/update-todos {:where {:id {:_is_null false}}
-                                           :_set {:complete true}})
-                       [:affected-rows]}])))
+    (eql/query->ast1 `[{(type/update-todos {:where {:id {:_is_null false}}
+                                            :_set {:complete true}})
+                        [::type/affected-rows]}])))
 
 (defmutation todo-uncheck-all [_]
   (action [{:keys [state]}]
     (swap! state on-all-items-in-list set-item-checked* false))
   (remote [_]
-    (fp/query->ast1 `[{(type/update-todos {:where {:id {:_is_null false}}
-                                           :_set {:complete false}})
-                       [:affected-rows]}])))
+    (eql/query->ast1 `[{(type/update-todos {:where {:id {:_is_null false}}
+                                            :_set {:complete false}})
+                        [::type/affected-rows]}])))
 
 (defmutation todo-clear-complete [_]
   (action [{:keys [state]}]
     (let [is-complete? (fn [item-ident] (get-in @state (conj item-ident ::todo/complete)))]
       (swap! state update-in [:component/by-id :todo-list ::type/todos]
-             (fn [todos] (vec (remove (fn [ident] (is-complete? ident)) todos))))))
+        (fn [todos] (vec (remove (fn [ident] (is-complete? ident)) todos))))))
   (remote [_]
-    (fp/query->ast1 `[{(type/delete-todos {:where {:complete {:_eq true}}})
-                       [:affected-rows]}])))
+    (eql/query->ast1 `[{(type/delete-todos {:where {:complete {:_eq true}}})
+                        [::type/affected-rows]}])))
 
 (defmutation todo-filter
   [{:keys [filter]}]
   (action [{:keys [state]}]
-    (swap! state assoc-in [:component/by-id :todo-list :ui.list/filter] filter)))
+    (swap! state assoc-in [:component/by-id :todo-list :ui/filter] filter)))

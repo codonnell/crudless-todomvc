@@ -1,19 +1,15 @@
 (ns crudless-todomvc.client
-  (:require [crudless-todomvc.type :as type]
-            [crudless-todomvc.type.todo :as todo]
+  (:require [crudless-todomvc.remote :as remote]
+            [crudless-todomvc.type :as type]
             [crudless-todomvc.ui :as ui]
-            [fulcro.client :as fc]
-            [fulcro.client.data-fetch :as df]
-            [fulcro.client.dom :as dom]
-            [fulcro.client.primitives :as fp]
-            [fulcro.incubator.dynamic-routing :as dr]
+            [com.fulcrologic.fulcro.application :as app]
+            [com.fulcrologic.fulcro.data-fetch :as df]
             [com.wsscode.common.async-cljs :refer [go-catch <?]]
             [com.wsscode.pathom.core :as p]
             [com.wsscode.pathom.connect :as pc]
             [com.wsscode.pathom.connect.graphql2 :as pcg]
             [com.wsscode.pathom.diplomat.http :as p.http]
             [com.wsscode.pathom.diplomat.http.fetch :as p.http.fetch]
-            [com.wsscode.pathom.fulcro.network :as pfn]
             [clojure.string :as str]))
 
 (def indexes (atom {}))
@@ -45,12 +41,6 @@
                                  (update ::p/placeholder-prefixes
                                          #(or % #{})))))]}))
 
-(pc/defresolver index-explorer [env _]
-  {::pc/input  #{:com.wsscode.pathom.viz.index-explorer/id}
-   ::pc/output [:com.wsscode.pathom.viz.index-explorer/index]}
-  {:com.wsscode.pathom.viz.index-explorer/index
-   (get env ::pc/indexes)})
-
 (def my-gql
   {::pcg/url "/api/graphql/v1/graphql"
    ::pcg/prefix "crudless-todomvc.type"
@@ -69,8 +59,7 @@
              ::p/placeholder-prefixes #{">"}
              ::p.http/driver p.http.fetch/request-async}
     ::p/mutate pc/mutate-async
-    ::p/plugins [(pc/connect-plugin {::pc/indexes indexes
-                                     ::pc/register [index-explorer]})
+    ::p/plugins [(pc/connect-plugin {::pc/indexes indexes})
                  p/error-handler-plugin
                  p/request-cache-plugin
                  p/trace-plugin]}))
@@ -78,18 +67,16 @@
 (defonce SPA (atom nil))
 
 (defn mount []
-  (reset! SPA (fc/mount @SPA ui/Root "app")))
+  (reset! SPA (app/mount! @SPA ui/Root "app")))
 
 (defn ^:export init []
-  (reset! SPA (fc/new-fulcro-client
-               :started-callback
-               (fn [app]
-                 (go-catch
-                  (<? (pcg/load-index my-gql indexes))
-                  (df/load app [:component/by-id :todo-list] ui/TodoList)))
+  (reset! SPA (app/fulcro-app
+                {:started-callback
+                 (fn [app]
+                   (go-catch
+                     (<? (pcg/load-index my-gql indexes))
+                     (df/load! app [:component/by-id :todo-list] ui/TodoList)))
 
-               :networking
-               {:remote (-> parser
-                            pfn/pathom-remote
-                            pfn/trace-remote)}))
+                 :remotes
+                 {:remote (remote/remote parser)}}))
   (mount))

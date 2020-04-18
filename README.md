@@ -1,8 +1,8 @@
 # CRUD-less TodoMVC
 
-This is a full stack implementation of the TodoMVC application in Fulcro 2.0. It uses Hasura and Pathom to power the backend portion of the app.
+This is a full stack implementation of the TodoMVC application in Fulcro 3.0. It uses Hasura and Pathom to power the backend portion of the app.
 
-This has been modified from the original [Fulcro 2.0 TodoMVC](https://github.com/fulcrologic/fulcro-todomvc) to use a Hasura GraphQL server as the backend instead of a Fulcro server.
+This has been modified from the original [Fulcro 3.0 TodoMVC](https://github.com/fulcrologic/fulcro) to use a Hasura GraphQL server as the backend instead of a Fulcro server.
 
 This application consists of three docker containers:
 * nginx to serve static assets and act as a reverse proxy
