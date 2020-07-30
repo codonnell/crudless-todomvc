@@ -1,9 +1,9 @@
 (ns crudless-todomvc.client
-  (:require [crudless-todomvc.remote :as remote]
-            [crudless-todomvc.type :as type]
+  (:require [crudless-todomvc.type :as type]
             [crudless-todomvc.ui :as ui]
             [com.fulcrologic.fulcro.application :as app]
             [com.fulcrologic.fulcro.data-fetch :as df]
+            [com.fulcrologic.fulcro.networking.mock-server-remote :as remote]
             [com.wsscode.common.async-cljs :refer [go-catch <?]]
             [com.wsscode.pathom.core :as p]
             [com.wsscode.pathom.connect :as pc]
@@ -78,5 +78,5 @@
                      (df/load! app [:component/by-id :todo-list] ui/TodoList)))
 
                  :remotes
-                 {:remote (remote/remote parser)}}))
+                 {:remote (remote/mock-http-server {:parser (fn [query] (parser {} query))})}}))
   (mount))
